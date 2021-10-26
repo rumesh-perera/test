@@ -1,0 +1,14 @@
+com/newrelic/server/runner/TCPServerReporter.class
+com/newrelic/server/api/Report.class
+com/newrelic/server/runner/TCPLogProducer.class
+com/newrelic/server/runner/TCPClientAcceptor.class
+com/newrelic/server/utils/TCPServerConstants.class
+com/newrelic/server/utils/TCPServerUtils.class
+com/newrelic/server/api/Log.class
+com/newrelic/server/impl/ServerReport.class
+com/newrelic/server/impl/TCPServer.class
+com/newrelic/server/impl/TextLog.class
+com/newrelic/TCPServerRunner.class
+com/newrelic/server/api/Consumer.class
+com/newrelic/server/api/Producer.class
+com/newrelic/server/runner/FileLogConsumer.class

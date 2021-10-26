@@ -1,0 +1,14 @@
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/api/Log.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/utils/TCPServerUtils.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/runner/TCPLogProducer.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/runner/TCPClientAcceptor.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/api/Consumer.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/impl/TCPServer.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/TCPServerRunner.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/api/Producer.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/impl/TextLog.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/runner/FileLogConsumer.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/impl/ServerReport.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/utils/TCPServerConstants.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/runner/TCPServerReporter.java
+/Users/djkevincr/interview/technical-challenge/src/main/java/com/newrelic/server/api/Report.java
