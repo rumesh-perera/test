@@ -35,7 +35,7 @@ public class TCPClientAcceptor implements Runnable {
   private static final Logger log = LogManager.getLogger(TCPClientAcceptor.class);
 
   private ServerSocket serverSocket;
-  private volatile AtomicInteger connectedClients = new AtomicInteger(0);
+  private volatile AtomicInteger connectedClients;
   private int maxNumClients;
   private ExecutorService serverThreadPool;
   private BlockingDeque<Log> logQueue;
@@ -47,7 +47,9 @@ public class TCPClientAcceptor implements Runnable {
                            ExecutorService serverThreadPool,
                            BlockingDeque<Log> logQueue,
                            AtomicBoolean serverState,
-                           CountDownLatch shutdownLatch) throws IOException {
+                           CountDownLatch shutdownLatch,
+                           AtomicInteger connectedClients) throws IOException {
+    this.connectedClients = connectedClients;
     this.serverSocket = new ServerSocket(port);
     this.maxNumClients = maxNumClients;
     this.serverThreadPool = serverThreadPool;
@@ -55,7 +57,6 @@ public class TCPClientAcceptor implements Runnable {
     this.serverState = serverState;
     this.shutdownLatch = shutdownLatch;
   }
-
 
   public void close(){
     try {

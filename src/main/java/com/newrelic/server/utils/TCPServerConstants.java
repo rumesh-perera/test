@@ -31,5 +31,8 @@ public class TCPServerConstants {
   public static String LOG_FILE_JVM_PARAM = "log.file";
   public static Integer GRACEFUL_TERMINATION_DURATION = 10000;
   public static Integer SERVER_REPORT_DURATION = 10;
+  public static Integer MEMORY_MAPPED_PARTITION_SIZE = 4;
+  public static Long  MEMORY_MAPPED_PARTITION_BYTE_SIZE = 1000000000L;
+  public static Integer INTEGER_BYTE_SIZE = 4;
 
 }

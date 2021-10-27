@@ -19,8 +19,6 @@ package com.newrelic.server.utils;
 
 import com.newrelic.server.impl.ServerReport;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -33,21 +31,11 @@ public class TCPServerUtils {
   }
 
   public static ServerReport generateReport(ServerReport lastServerReport,
-                                       ConcurrentHashMap<Integer, AtomicLong> integerCache) {
-
-    long totalUnique = 0;
-    long totalDuplicate = 0;
-    for (Map.Entry<Integer, AtomicLong> entry : integerCache.entrySet()) {
-      if (entry.getValue().get() == 1L) {
-        totalUnique++;
-      } else if (entry.getValue().get() >= 2L) {
-        totalDuplicate++;
-      }
-    }
-
-    return new ServerReport(totalUnique, totalDuplicate,
-            totalUnique - lastServerReport.getTotalUnique(),
-            totalDuplicate - lastServerReport.getDuplicateCount());
+                                            AtomicLong totalUnique,
+                                            AtomicLong totalDuplicate) {
+    return new ServerReport(totalUnique.get(), totalDuplicate.get(),
+            totalUnique.get() - lastServerReport.getTotalUnique(),
+            totalDuplicate.get() - lastServerReport.getTotalDuplicate());
   }
 
 

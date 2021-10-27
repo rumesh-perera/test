@@ -26,7 +26,6 @@ import com.newrelic.server.utils.TCPServerConstants;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +33,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TCPNumberServer implements Server {
@@ -42,19 +42,20 @@ public class TCPNumberServer implements Server {
   private ExecutorService serverThreadPool;
   private ScheduledExecutorService reportExecutor;
   private CountDownLatch shutdownLatch;
-  private ConcurrentHashMap<Integer, AtomicLong> integerCache;
   private volatile AtomicBoolean serverState;
   private String logFileLocation = TCPServerConstants.DEFAULT_LOG_FILE_LOCATION;
   private FileLogConsumer fileLogConsumer;
+  private volatile AtomicLong totalUnique = new AtomicLong(0L);
+  private volatile AtomicLong totalDuplicate = new AtomicLong(0L);
+  private volatile AtomicInteger connectedClients = new AtomicInteger(0);
 
   public TCPNumberServer(CountDownLatch shutdownLatch) throws IOException {
     this.logQueue = new LinkedBlockingDeque<>();
     this.serverThreadPool = Executors.newFixedThreadPool(TCPServerConstants.SERVER_POOL_SIZE);
     this.reportExecutor  = Executors.newSingleThreadScheduledExecutor();
     this.shutdownLatch = shutdownLatch;
-    this.integerCache = new ConcurrentHashMap<>(TCPServerConstants.MAX_NINE_DIGIT_INTEGER);
     this.serverState = new AtomicBoolean(true);
-    this.fileLogConsumer = new FileLogConsumer(logFileLocation, logQueue, shutdownLatch, serverState);
+    this.fileLogConsumer = new FileLogConsumer(logFileLocation, logQueue, serverState, totalUnique, totalDuplicate);
   }
 
   public TCPNumberServer(CountDownLatch shutdownLatch, String logFileLocation) throws IOException {
@@ -62,19 +63,18 @@ public class TCPNumberServer implements Server {
     this.serverThreadPool = Executors.newFixedThreadPool(TCPServerConstants.SERVER_POOL_SIZE);
     this.reportExecutor  = Executors.newSingleThreadScheduledExecutor();
     this.shutdownLatch = shutdownLatch;
-    this.integerCache = new ConcurrentHashMap<>(TCPServerConstants.MAX_NINE_DIGIT_INTEGER);
     this.serverState = new AtomicBoolean(true);
     this.logFileLocation = logFileLocation;
-    this.fileLogConsumer = new FileLogConsumer(logFileLocation, logQueue, shutdownLatch, serverState);
+    this.fileLogConsumer = new FileLogConsumer(logFileLocation, logQueue, serverState, totalUnique, totalDuplicate);
   }
 
 
   public void start() throws IOException {
-    serverThreadPool.submit(new TCPClientAcceptor(TCPServerConstants.SERVER_PORT,
+    this.serverThreadPool.submit(new TCPClientAcceptor(TCPServerConstants.SERVER_PORT,
             TCPServerConstants.SERVER_MAX_CLIENT_SIZE,
-            serverThreadPool, logQueue, serverState, shutdownLatch));
-    serverThreadPool.submit(fileLogConsumer);
-    reportExecutor.scheduleAtFixedRate(new TCPServerReporter(integerCache, serverState),
+            serverThreadPool, logQueue, serverState, shutdownLatch, connectedClients));
+    this.serverThreadPool.submit(fileLogConsumer);
+    this.reportExecutor.scheduleAtFixedRate(new TCPServerReporter(serverState, totalUnique, totalDuplicate),
             TCPServerConstants.SERVER_REPORT_DURATION,
             TCPServerConstants.SERVER_REPORT_DURATION, TimeUnit.SECONDS);
   }
@@ -105,5 +105,9 @@ public class TCPNumberServer implements Server {
     fileLogConsumer.close();
   }
 
+
+  public Integer getConnectedClientsCount(){
+    return connectedClients.get();
+  }
 
 }

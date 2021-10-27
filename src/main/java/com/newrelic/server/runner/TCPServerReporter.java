@@ -21,6 +21,7 @@ package com.newrelic.server.runner;
 import com.newrelic.server.impl.ServerReport;
 import com.newrelic.server.utils.TCPServerUtils;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,21 +29,24 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TCPServerReporter implements Runnable {
 
   private ServerReport lastReport;
-  private ConcurrentHashMap<Integer, AtomicLong> integerCache;
   private volatile AtomicBoolean serverState;
+  private volatile AtomicLong totalUnique;
+  private volatile AtomicLong totalDuplicate;
 
-  public TCPServerReporter(ConcurrentHashMap<Integer, AtomicLong> integerCache,
-                           AtomicBoolean serverState) {
+  public TCPServerReporter(AtomicBoolean serverState,
+                           AtomicLong totalUnique,
+                           AtomicLong totalDuplicate) {
     this.lastReport = new ServerReport(0L, 0L,
             0L, 0L);
-    this.integerCache = integerCache;
     this.serverState = serverState;
+    this.totalUnique = totalUnique;
+    this.totalDuplicate = totalDuplicate;
   }
 
   @Override
   public void run() {
-    while (serverState.get()) {
-      lastReport = TCPServerUtils.generateReport(lastReport, integerCache);
+    if (serverState.get()) {
+      lastReport = TCPServerUtils.generateReport(lastReport, totalUnique, totalDuplicate);
       System.out.println(lastReport.print());
     }
   }

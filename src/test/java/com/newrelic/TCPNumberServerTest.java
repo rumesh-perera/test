@@ -17,14 +17,19 @@
  */
 package com.newrelic;
 
+import com.newrelic.client.ClientRunner;
 import com.newrelic.client.TCPTestClient;
 import com.newrelic.server.impl.TCPNumberServer;
+import com.newrelic.server.utils.TCPServerConstants;
 import com.newrelic.server.utils.TCPServerUtils;
 import org.junit.Test;
 import org.junit.Assert;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class TCPNumberServerTest {
 
@@ -41,25 +46,56 @@ public class TCPNumberServerTest {
 
 
   @Test
-  public void testTCPServerNumberOfClients() throws IOException {
+  public void testTCPServerNumberOfClients() throws IOException, InterruptedException {
     TCPNumberServer numberServer = new TCPNumberServer(new CountDownLatch(1));
 
     numberServer.start();
-    int maxNumClients = 0;
-    while (true){
-      TCPTestClient testClient;
+
+    while (true) {
       try {
-        testClient = new TCPTestClient("localhost", 4000);
-        maxNumClients++;
-      } catch (IOException e){
+        TCPTestClient testClient = new TCPTestClient("localhost", 4000);
+      } catch (IOException e) {
         break;
       }
     }
-    numberServer.shutdown();
     Assert.assertEquals("Max Concurrent Clients for Number Server is 5",
-            maxNumClients, 5);
+            5, numberServer.getConnectedClientsCount().intValue());
+    numberServer.shutdown();
 
   }
+
+  @Test
+  public void testTCPServer() throws IOException, InterruptedException {
+      CountDownLatch l = new CountDownLatch(1);
+    TCPNumberServer numberServer = new TCPNumberServer(l);
+
+    numberServer.start();
+
+    ExecutorService service = Executors.newFixedThreadPool(TCPServerConstants.SERVER_POOL_SIZE);
+
+    int count = TCPServerConstants.SERVER_POOL_SIZE;
+    while (count >= 0) {
+      try {
+
+        TCPTestClient testClient = new TCPTestClient("localhost", 4000);
+        ClientRunner runner = new ClientRunner(testClient);
+        service.submit(runner);
+      } catch (IOException e) {
+        break;
+      }
+      count--;
+    }
+
+
+
+    service.shutdown();
+    service.awaitTermination(100, TimeUnit.SECONDS);
+
+    numberServer.shutdown();
+    numberServer.shutdown();
+
+  }
+
 
 
 }
