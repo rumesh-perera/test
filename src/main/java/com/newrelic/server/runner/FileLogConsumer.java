@@ -21,7 +21,8 @@ package com.newrelic.server.runner;
 import com.newrelic.server.api.Consumer;
 import com.newrelic.server.api.Log;
 import com.newrelic.server.utils.TCPServerConstants;
-import com.newrelic.server.utils.TCPServerUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -31,22 +32,28 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-
+/**
+ * FileLogConsumer consumes logs from log queue and writes to log file.
+ */
 public class FileLogConsumer implements Consumer<Log>, Runnable {
+
+  private static final Logger log = LogManager.getLogger(FileLogConsumer.class);
 
   private BlockingDeque<Log> logQueue;
   private volatile AtomicBoolean serverState;
-  private volatile AtomicLong totalUnique;
-  private volatile AtomicLong totalDuplicate;
   private PrintWriter fileWriter;
   private Integer PARTITION_SIZE = TCPServerConstants.MEMORY_MAPPED_PARTITION_SIZE;
   private Long PARTITION_BYTE_SIZE = TCPServerConstants.MEMORY_MAPPED_PARTITION_BYTE_SIZE;
+  // use of MappedByteBuffer prevents JVM going out of memory by allocating memory for 1000000000 integers
   private MappedByteBuffer[] byteBuffers = new MappedByteBuffer[PARTITION_SIZE];
-  private  FileChannel channel;
-  private Integer INT_BYTE_SIZE = TCPServerConstants.INTEGER_BYTE_SIZE;
+  private FileChannel channel;
+  private Long INT_BYTE_SIZE = TCPServerConstants.INTEGER_BYTE_SIZE;
+  private volatile AtomicLong totalUnique;
+  private volatile AtomicLong totalDuplicate;
 
   public FileLogConsumer(String logfile,
                          BlockingDeque<Log> logQueue,
@@ -71,7 +78,19 @@ public class FileLogConsumer implements Consumer<Log>, Runnable {
 
   @Override
   public void consume(Log log) {
-    this.fileWriter.println(log.getContent());
+    int number = Integer.valueOf(log.getContent());
+
+    int index = (number % (PARTITION_BYTE_SIZE.intValue() / INT_BYTE_SIZE.intValue())) * INT_BYTE_SIZE.intValue();
+    int partition = number / (PARTITION_BYTE_SIZE.intValue() / INT_BYTE_SIZE.intValue());
+
+    int frequency = byteBuffers[partition].getInt(index);
+    if (frequency == 0) {
+      this.totalUnique.incrementAndGet();
+      this.fileWriter.println(log.getContent());
+    } else {
+      this.totalDuplicate.incrementAndGet();
+    }
+    this.byteBuffers[partition].putInt(index, frequency + 1);
   }
 
   @Override
@@ -79,33 +98,24 @@ public class FileLogConsumer implements Consumer<Log>, Runnable {
     try {
       this.fileWriter.close();
       this.channel.close();
-    }catch (IOException e){
-      //Ignore
+    } catch (IOException e) {
+      log.error("Exception occurred at the close of log consumer.", e);
     }
   }
-
 
   @Override
   public void run() {
     while (serverState.get()) {
       try {
-        Log log = logQueue.take();
-        int number = Integer.valueOf(log.getContent());
-
-        int index = (number % (PARTITION_BYTE_SIZE.intValue() / INT_BYTE_SIZE)) * INT_BYTE_SIZE;
-        int partition = number / (PARTITION_BYTE_SIZE.intValue() / INT_BYTE_SIZE);
-
-        int frequency = byteBuffers[partition].getInt(index);
-        if (frequency == 0) {
-          totalUnique.incrementAndGet();
-          consume(log);
-        } else {
-          totalDuplicate.incrementAndGet();
+        Log log = logQueue.poll(2, TimeUnit.SECONDS);
+        if (log == null) {
+          continue;
         }
-        byteBuffers[partition].putInt(index, frequency + 1);
+        consume(log);
       } catch (InterruptedException e) {
-        //Ignore
+        log.error("Exception occurred when consuming log from log queue.", e);
       }
     }
   }
+
 }

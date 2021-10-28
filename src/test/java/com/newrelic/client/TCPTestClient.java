@@ -24,15 +24,20 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * TCP client that connect to TCPNumberServer.
+ *
+ */
 public class TCPTestClient {
+
   private Socket clientSocket;
   private PrintWriter out;
   private BufferedReader in;
 
   public TCPTestClient(String ip, int port) throws IOException {
-    clientSocket = new Socket(ip, port);
-    out = new PrintWriter(clientSocket.getOutputStream(), true);
-    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    this.clientSocket = new Socket(ip, port);
+    this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+    this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
   }
 
   public void sendMessage(String msg) {
@@ -40,16 +45,16 @@ public class TCPTestClient {
   }
 
   public String receiveMessage() throws IOException {
-    return in.readLine();
+    return this.in.readLine();
   }
 
   public void stopConnection() {
     try {
-      in.close();
-      out.close();
-      clientSocket.close();
+      this.in.close();
+      this.out.close();
+      this.clientSocket.close();
     } catch (IOException e) {
-      //Ignore
+      // Ignore
     }
   }
 

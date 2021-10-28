@@ -22,6 +22,9 @@ import com.newrelic.server.impl.ServerReport;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
+/**
+ * TCPNumberServer utilities class.
+ */
 public class TCPServerUtils {
 
   private static Pattern nineDigitMatcher = Pattern.compile(TCPServerConstants.SERVER_DIGIT_PATTERN);
@@ -30,13 +33,12 @@ public class TCPServerUtils {
     return nineDigitMatcher.matcher(input).matches();
   }
 
-  public static ServerReport generateReport(ServerReport lastServerReport,
+  public static ServerReport generateReport(ServerReport lastReport,
                                             AtomicLong totalUnique,
-                                            AtomicLong totalDuplicate) {
-    return new ServerReport(totalUnique.get(), totalDuplicate.get(),
-            totalUnique.get() - lastServerReport.getTotalUnique(),
-            totalDuplicate.get() - lastServerReport.getTotalDuplicate());
+                                            AtomicLong totalDuplicated) {
+    return new ServerReport(totalUnique.get(), totalDuplicated.get(),
+            (totalUnique.get() - lastReport.getTotalUnique()),
+            (totalDuplicated.get() - lastReport.getTotalDuplicate()));
   }
-
 
 }

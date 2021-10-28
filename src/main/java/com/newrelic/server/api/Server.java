@@ -20,10 +20,21 @@ package com.newrelic.server.api;
 
 import java.io.IOException;
 
+/**
+ * Generic Server Interface.
+ */
 public interface Server {
 
+  /**
+   * Start the server.
+   *
+   * @throws IOException in case of failure on startup
+   */
   void start() throws IOException;
 
+  /**
+   * Stop the server.
+   */
   void shutdown();
 
 }

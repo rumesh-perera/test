@@ -19,6 +19,9 @@ package com.newrelic.server.impl;
 
 import com.newrelic.server.api.Log;
 
+/**
+ * TextLog log with text content.
+ */
 public class TextLog implements Log {
 
   private String content;

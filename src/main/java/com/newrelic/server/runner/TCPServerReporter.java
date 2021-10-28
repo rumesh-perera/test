@@ -21,32 +21,33 @@ package com.newrelic.server.runner;
 import com.newrelic.server.impl.ServerReport;
 import com.newrelic.server.utils.TCPServerUtils;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * TCPServerReporter handles report writing to console at given interval 10 seconds.
+ */
 public class TCPServerReporter implements Runnable {
 
   private ServerReport lastReport;
   private volatile AtomicBoolean serverState;
   private volatile AtomicLong totalUnique;
-  private volatile AtomicLong totalDuplicate;
+  private volatile AtomicLong totalDuplicated;
 
   public TCPServerReporter(AtomicBoolean serverState,
                            AtomicLong totalUnique,
-                           AtomicLong totalDuplicate) {
+                           AtomicLong totalDuplicated) {
     this.lastReport = new ServerReport(0L, 0L,
             0L, 0L);
     this.serverState = serverState;
     this.totalUnique = totalUnique;
-    this.totalDuplicate = totalDuplicate;
+    this.totalDuplicated = totalDuplicated;
   }
 
   @Override
   public void run() {
     if (serverState.get()) {
-      lastReport = TCPServerUtils.generateReport(lastReport, totalUnique, totalDuplicate);
+      lastReport = TCPServerUtils.generateReport(lastReport, totalUnique, totalDuplicated);
       System.out.println(lastReport.print());
     }
   }

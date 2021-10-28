@@ -23,6 +23,8 @@ import com.newrelic.server.api.Producer;
 import com.newrelic.server.impl.TextLog;
 import com.newrelic.server.utils.TCPServerConstants;
 import com.newrelic.server.utils.TCPServerUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,7 +35,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * TCPLogProducer reads data from TCP socket and produces to log queue.
+ */
 public class TCPLogProducer implements Producer<Log>, Runnable {
+
+  private static final Logger log = LogManager.getLogger(TCPLogProducer.class);
 
   private Socket socket;
   private BufferedReader socketReader;
@@ -56,43 +63,50 @@ public class TCPLogProducer implements Producer<Log>, Runnable {
   }
 
   @Override
-  public void produce(Log log) {
-    logQueue.offer(log);
+  public void produce(Log producedLog) {
+    try {
+      logQueue.put(producedLog);
+    } catch (InterruptedException e) {
+      log.error("Exception occurred when consuming log from log queue.", e);
+    }
   }
 
   @Override
   public void close() {
     try {
-      this.socketReader.close();
       this.socket.close();
+      this.socketReader.close();
     } catch (IOException e) {
-      // Ignore
+      log.error("Exception occurred at closing Log producer.", e);
     }
   }
-
 
   @Override
   public void run() {
     while (serverState.get()) {
       try {
         String textLine = this.socketReader.readLine();
+        // check for valid digit sequence.
         if (TCPServerUtils.isValidNineDigitString(textLine)) {
           Log log = new TextLog(textLine);
           produce(log);
+          // check for terminate sequence.
         } else if (TCPServerConstants.TERMINATE_SEQUENCE.equals(textLine)) {
           close();
           this.shutdownLatch.countDown();
           break;
         } else {
+          // unknown sequence and client connection is terminated.
           close();
           break;
         }
       } catch (IOException e) {
-        // move to next iteration
+        log.error("Exception occurred when reading logs on tcp socket.", e);
+        // continue to next iteration
         continue;
       }
     }
-    connectedClients.decrementAndGet();
+    this.connectedClients.decrementAndGet();
   }
 
 }

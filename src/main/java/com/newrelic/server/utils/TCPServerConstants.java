@@ -18,6 +18,9 @@
 
 package com.newrelic.server.utils;
 
+/**
+ * TCPNumberServer utilities class.
+ */
 public class TCPServerConstants {
 
   public static Integer MAX_NINE_DIGIT_INTEGER = 999999999;
@@ -29,10 +32,12 @@ public class TCPServerConstants {
   public static String SERVER_DIGIT_PATTERN = "^[0-9]{9}$";
   public static String DEFAULT_LOG_FILE_LOCATION = "./numbers.log";
   public static String LOG_FILE_JVM_PARAM = "log.file";
-  public static Integer GRACEFUL_TERMINATION_DURATION = 10000;
+  public static Integer GRACEFUL_TERMINATION_DURATION = 10;
   public static Integer SERVER_REPORT_DURATION = 10;
   public static Integer MEMORY_MAPPED_PARTITION_SIZE = 4;
-  public static Long  MEMORY_MAPPED_PARTITION_BYTE_SIZE = 1000000000L;
-  public static Integer INTEGER_BYTE_SIZE = 4;
+  public static Long MEMORY_MAPPED_PARTITION_BYTE_SIZE = 1000000000L;
+  public static Long INTEGER_BYTE_SIZE = 4L;
+  public static String LOCALHOST = "localhost";
+  public static Integer LOG_QUEUE_CAPACITY = 4000000;
 
 }

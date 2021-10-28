@@ -20,6 +20,9 @@ package com.newrelic.server.impl;
 
 import com.newrelic.server.api.Report;
 
+/**
+ * ServerReport that will be printed to console.
+ */
 public class ServerReport implements Report {
 
   private Long totalUnique;
@@ -70,7 +73,7 @@ public class ServerReport implements Report {
   }
 
 
-  public String print(){
+  public String print() {
     return String.format("Received %s unique numbers, %s duplicates. Unique total: %s", uniqueCount,
             duplicateCount, totalUnique);
   }

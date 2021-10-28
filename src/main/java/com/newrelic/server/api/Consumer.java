@@ -17,10 +17,21 @@
  */
 package com.newrelic.server.api;
 
+/**
+ * Consumer interface for producer / consumer pattern.
+ */
 public interface Consumer<T> {
 
+  /**
+   * Consumer given object.
+   *
+   * @param object which is consumed by Consumer
+   */
   void consume(T object);
 
+  /**
+   * Closes the consumer.
+   */
   void close();
 
 }

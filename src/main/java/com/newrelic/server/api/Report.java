@@ -18,8 +18,16 @@
 
 package com.newrelic.server.api;
 
+/**
+ * Generic report interface.
+ */
 public interface Report {
 
+  /**
+   * Generate report in given format.
+   *
+   * @return String report
+   */
   String print();
 
 }

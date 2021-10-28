@@ -17,8 +17,16 @@
  */
 package com.newrelic.server.api;
 
+/**
+ * Log interface which represents Generic log.
+ */
 public interface Log {
 
+  /**
+   * Get log content as String.
+   *
+   * @return String log content
+   */
   String getContent();
 
 }

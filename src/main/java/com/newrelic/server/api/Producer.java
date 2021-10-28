@@ -17,10 +17,21 @@
  */
 package com.newrelic.server.api;
 
+/**
+ * Producer interface for producer / consumer pattern.
+ */
 public interface Producer<T> {
 
+  /**
+   * Produce the given object.
+   *
+   * @param object which will be produced.
+   */
   void produce(T object);
 
+  /**
+   * Closes the given producer.
+   */
   void close();
 
 }

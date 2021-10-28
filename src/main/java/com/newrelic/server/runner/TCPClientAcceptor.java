@@ -20,6 +20,8 @@ package com.newrelic.server.runner;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +32,9 @@ import com.newrelic.server.api.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * TCPClientAcceptor accepts clients from TCP socket.
+ */
 public class TCPClientAcceptor implements Runnable {
 
   private static final Logger log = LogManager.getLogger(TCPClientAcceptor.class);
@@ -58,11 +63,11 @@ public class TCPClientAcceptor implements Runnable {
     this.shutdownLatch = shutdownLatch;
   }
 
-  public void close(){
+  public void close() {
     try {
       this.serverSocket.close();
-    } catch (IOException e){
-      //Ignore
+    } catch (IOException e) {
+      log.error("Exception occurred at closing TCP acceptor.", e);
     }
   }
 
@@ -72,12 +77,13 @@ public class TCPClientAcceptor implements Runnable {
             connectedClients.get() < maxNumClients) {
       try {
         Socket socket = serverSocket.accept();
-        connectedClients.incrementAndGet();
+        // increment concurrent clients count
+        this.connectedClients.incrementAndGet();
         TCPLogProducer logProducer = new TCPLogProducer(socket, logQueue, shutdownLatch,
                 serverState, connectedClients);
-        serverThreadPool.submit(logProducer);
-      } catch (IOException e) {
-        // Ignore
+        this.serverThreadPool.submit(logProducer);
+      } catch (Throwable e) {
+        log.error("Exception occurred at accepting TCP client.", e);
       }
     }
     close();
